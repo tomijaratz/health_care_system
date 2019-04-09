@@ -1,0 +1,145 @@
+Welcome, in this readme i will explain how to run the API and make requests.
+
+For the software and design considerations taken read the DESIGN_DISCUSSION file
+contained in the same folder.
+
+HOW_TO_RUN:
+
+1) You must previously have installed docker-compose to run the web server
+2) In this same folder execute on a terminal the next command: 'docker-compose up --build'
+3) Now the web server is running on port 4000 connected to a mongoDB running in port 27017
+
+
+HOW_TO_INTERACT_WITH_THE_SERVER:
+
+The server is exposing to base endpoints:
+    - /patient
+    - /condition
+
+You can interact whit them by the four standard HTTP basic CRUD operations, GET
+PUT, POST and DELETE. At the end of this README there is a resume containing all the request formats.
+
+------------------------------------------------------------------------------------------------
+
+POST:
+
+To insert a patient/condition the request must be a POST to: http://localhost:4000/patient
+or http://localhost:4000/condition respectively,
+containing in the body the json representing the patient or condition, it must not contain an
+'_id' field in the body because the server is going to take care of creating one.
+
+If the operation succeeds it is going to return a response with code 201 and the id
+associated to the document created.
+
+This is an example of a response to a successful POST:
+{
+    "_id": "5caad65a14da630013fa1388",
+    "message": "document created successfully!",
+    "ok": true
+}
+
+By the other hand, if the operation doesn't result successful, an error response
+is going to be retrieved with 400 status code, a 'bad request message' and
+a list of the errors found in the document.
+
+Example response for a patient document that contained an invalid entry:
+
+{
+    "errors_found": [
+        "invalid_entry_found"
+    ],
+    "message": "Bad request parameters!",
+    "ok": false
+}
+
+Finally, to insert a condition(is necessary that the condition refers to an existing patient), it
+must contain in the subject a reference to a patient id, this can be done by first inserting a patient to
+the system and then modifying some of the files in the test_cases folder which describes valid conditions,
+putting in .subject.reference after 'Patient/' the id of the patient. For example like this:
+
+ "subject": {
+    "reference": "Patient/5caac29324b5c7000c141ab4",
+    "display": "Roel"
+  }
+
+If the patient exists and the condition is valid you will get a Ok response,
+if some problem occurs you will be notified in the response.
+
+------------------------------------------------------------------------------------------------
+
+GET:
+
+To get a document you must perform a GET to some of the base endpoints followed
+by the id of the element to get. For example, to get a condition you should perform:
+
+http://localhost:4000/condition/5caa6d82e7546d000ce3577e
+
+If the document is present, a json containing it will be retrieved with a 200 status code
+in the response, in the case the document is not present a response with 404 code will
+be retrieved with a "not found" message in the body.
+
+By performing the GET without the id, all the documents persisted in a collection can be retrieved,
+performing a get to http://localhost:4000/patient or http://localhost:4000/condition the result
+will be a list with all the documents
+
+GET PATIENT CONDITIONS:
+
+As i assumed in DESIGN_DISCUSSION, a patient may have associated many conditions in his
+medical history record, to get all the conditions of a patient, a GET must be performed
+with the next format. http://localhost:4000/patient/<id>/conditions where 'id' is the id
+of the patient which's conditions we want.
+
+
+------------------------------------------------------------------------------------------------
+
+DELETE:
+
+The same logic as with the GET, but performing a DELETE request. If the document
+is present it will be deleted from the database and a acknowledge message indicating
+the successful operation will be retrieved. By the other way, if the document to
+be deleted is not present you will get a response indicating that. You also can
+delete every document in patient and condition collections by performing the DELETE
+without id(good for testing only)
+
+------------------------------------------------------------------------------------------------
+
+
+PUT:
+
+To replace a document you must perform a PUT request to any of the base endpoints
+followed by the id of the document to be updated and in the body, the json with
+the new data for the document. It MUST contain an '_id' field matching the same
+id provided in the request url to accord with de FHIR standards. If the document
+id provided is not present a new document is going to be created with that id.
+
+EXAMPLES:
+
+In the folder /test_cases you can find examples of json documents representing
+patients so as conditions. For both entities there are valid and invalid inputs
+according the FHIR standard.
+
+I recommend to use Postman software to make the requests.
+
+RESUME:
+GET patient: GET to http://localhost:4000/patient/<patient_id>
+GET condition: GET to http://localhost:4000/condition/<condition_id>
+GET all patients: GET to http://localhost:4000/patient
+GET all conditions: GET to http://localhost:4000/condition
+GET patient conditions: GET to http://localhost:4000/patient/<patient_id>/conditions
+
+POST patient: POST to http://localhost:4000/patient
+POST condition: POST to http://localhost:4000/condition
+
+DELETE patient: DELETE to http://localhost:4000/patient/<patient_id>
+DELETE condition: DELETE to http://localhost:4000/condition/<condition_id>
+DELETE all patients: DELETE to http://localhost:4000/patient
+DELETE all conditions: DELETE to http://localhost:4000/condition
+
+UPDATE patient: PUT to http://localhost:4000/patient/<patient_id> containing in the body the '_id' field
+UPDATE condition: PUT to http://localhost:4000/condition/<condition_id> containing in the body the '_id' field
+
+Remember that every condition must refer to an existing patient in the moment of update or insertion
+
+
+
+

@@ -1,0 +1,50 @@
+Here i will present some decisions taken in the process and problems that came across
+during the implementation and how i managed with them.
+
+1) Software used:
+This web server was codded in python using flask and pymongo frameworks
+to handle with the rest layer and the database interactions respectively. MongoDB was
+used to persist and retrieve the data.
+
+2) About FHIR standard.
+
+ - The FHIR standard contains a lot of documentation about how the services must be implemented,
+    in this case i took the liberty of simplify some thing because this is a simple demo.
+
+ - I did not added authorization and security features .
+
+ - About the validation of the documents i implemented some handmade validations
+    following the rules contained in the FHIR documentation to test the consistency
+    of the documents. In a real world project we could use the Json Schema validation
+    through 'jsonschema' module or through te FHIR validator API.
+
+ - About Patients and Conditions i assumed that a condition can not be inserted or updated in the
+    database if the patient which it refers to not exists. By the other hand, a patient can be associated
+    with multiple conditions across it's medical history record. At the moment of deleting a patient
+    we have two options, keep the conditions associated to it or delete them to. In this project
+    i decided to don't delete them, but depending on the business requirements and which is going
+    to be the purpose of the software this decision can be modified. Maybe the situations where you would want to
+    keep the conditions of deleted patients are not very intuitive they could exist. For example
+    if you are making a study associated to cancer proportion related to other diseases and need to know
+    the conditions history record independently of the patients which had them.
+
+  - About using '_id' instead of 'id':
+    This is a problem not essential to the design by itself but is a 'technological binding'
+    obstacle. As it is clear, using '_id' instead of 'id' outstands the FHIR standard.
+    A a result from the choice of using mongoDB for the data persistence, we are tied to
+    have present in every document a _id field which is unique and is used by mongo
+    as a primary key to organize it's internal structure. Even if it's possible
+    to implement a unique 'id' field by ourselves distinct from the '_id' provided
+    by mongo to accomplish with the standard this is a very not recommended practice.
+    In large systems where the data grows fast and database sharding is necessary in
+    order to maintain the consistency and good throughput, mongo uses the _id field to this
+    purpose and changing it may be critical.
+
+      SOLUTION: My approche in a real world system that needs to
+      fit with the FHIR standard would be to implement some kind of middle layer mapping
+      between the database and the web interface, modifying the json structure before being
+      persisted and before being retrieved to the web.
+
+  - Tests are missing to, it is a bad practice to not test the software but in this case
+     i think we can manage to see the product consistency with the files contained in the test cases folder.
+
